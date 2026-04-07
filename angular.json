@@ -31,7 +31,9 @@
           "skipTests": true
         },
         "@schematics/angular:service": {
-          "skipTests": true
+          "skipTests": true,
+          "type": "service",
+          "addTypeToClassName": true
         }
       },
       "root": "",
@@ -95,5 +97,8 @@
         }
       }
     }
+  },
+  "cli": {
+    "analytics": false
   }
 }
