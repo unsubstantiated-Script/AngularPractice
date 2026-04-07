@@ -1,4 +1,4 @@
-import {Component, inject} from '@angular/core';
+import {ChangeDetectorRef, Component, inject} from '@angular/core';
 import {HousingLocation} from '../housing-location/housing-location';
 import {HousingLocationInfo} from '../housinglocation';
 import {HousingService} from "../housing.service";
@@ -8,13 +8,13 @@ import {HousingService} from "../housing.service";
     imports: [HousingLocation],
     template: `
         <section>
-            <form>
-                <input type="text" placeholder="Filter by city "/>
-                <button class="primary" type="button">Search</button>
+            <form (submit)="filterResults(filter.value); $event.preventDefault()">
+                <input type="text" placeholder="Filter by city" #filter/>
+                <button class="primary" type="submit">Search</button>
             </form>
         </section>
         <section class="results">
-            @for (housingLocation of housingLocationList; track $index) {
+            @for (housingLocation of filteredLocationList; track $index) {
                 <app-housing-location [housingLocation]="housingLocation"/>
             }
         </section>
@@ -22,12 +22,32 @@ import {HousingService} from "../housing.service";
     styleUrls: [`./home.css`],
 })
 export class Home {
-    readonly baseUrl = 'https://angular.dev/assets/images/tutorials/common';
-
+    private readonly changeDetectorRef = inject(ChangeDetectorRef);
     housingLocationList: HousingLocationInfo[] = [];
     housingService = inject(HousingService);
 
+    filteredLocationList: HousingLocationInfo[] = [];
+
     constructor() {
-        this.housingLocationList = this.housingService.getAllHousingLocations();
+        this.housingService
+            .getAllHousingLocations()
+            .then((housingLocationList: HousingLocationInfo[]) => {
+                this.housingLocationList = housingLocationList;
+                this.filteredLocationList = housingLocationList;
+                this.changeDetectorRef.markForCheck();
+            });
+    }
+
+    filterResults(text: string) {
+        const searchText = text.trim().toLowerCase();
+
+        if (!searchText) {
+            this.filteredLocationList = this.housingLocationList;
+            return;
+        }
+
+        this.filteredLocationList = this.housingLocationList.filter((housingLocation) =>
+            housingLocation.city.toLowerCase().includes(searchText),
+        );
     }
 }
